@@ -62,8 +62,14 @@ export class RabbitService implements OnModuleDestroy {
     const exchangeName = process.env.RABBIT_EXCHANGE_NAME || 'iot.events';
     const exchangeType = process.env.RABBIT_EXCHANGE_TYPE || 'topic';
     const queueName = process.env.RABBIT_QUEUE_NAME || 'reflect.service';
-    const bindingKeysEnv = process.env.RABBIT_BINDING_KEYS || 'device.*,device.telemetry,test.*';
+    const bindingKeysEnv = process.env.RABBIT_BINDING_KEYS || 'device.created,device.connected,device.disconnected,device.deleted,device.telemetry,test.*';
     const bindingKeys = bindingKeysEnv.split(',').map((k) => k.trim()).filter(Boolean);
+    
+    this.logger.info('🔧 Binding keys configuration', {
+      env: bindingKeysEnv,
+      parsed: bindingKeys,
+      count: bindingKeys.length
+    });
     
     try {
       await ch.assertExchange(exchangeName, exchangeType, { durable: true });
@@ -117,15 +123,12 @@ export class RabbitService implements OnModuleDestroy {
       const payloadPreview = this.createPayloadPreview(payload);
       const messageId = this.generateMessageId();
       
-      this.logger.info('📤 Publishing message to RabbitMQ', {
+      // Reduced logging - only log essential info
+      this.logger.debug('📤 Publishing message to RabbitMQ', {
         messageId,
-        exchange: `🔀 ${exchange}`,
-        routingKey: `🎯 ${routingKey}`,
-        size: `${buffer.length} bytes`,
-        durable: durable ? '✅' : '❌',
-        ttl: ttlMs ? `${ttlMs}ms` : '∞',
-        payloadPreview,
-        timestamp: new Date().toISOString()
+        exchange,
+        routingKey,
+        size: `${buffer.length} bytes`
       });
       
       const published = ch.publish(exchange, routingKey, buffer, {
@@ -146,12 +149,12 @@ export class RabbitService implements OnModuleDestroy {
         throw new Error('Failed to publish message to RabbitMQ');
       }
       
-      this.logger.info('✅ Message published to RabbitMQ successfully', {
+      // Only log success at debug level to reduce clutter
+      this.logger.debug('✅ Message published to RabbitMQ successfully', {
         messageId,
-        exchange: `🔀 ${exchange}`,
-        routingKey: `🎯 ${routingKey}`,
-        size: `${buffer.length} bytes`,
-        published: '✅'
+        exchange,
+        routingKey,
+        size: `${buffer.length} bytes`
       });
       
       return { published, exchange, routingKey, size: buffer.length };

@@ -9,10 +9,10 @@ import { LoggerModule } from './logger/logger.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    LoggerModule,
-    RabbitModule,
-    EventHubModule,
-    AzureModule,
+    EventHubModule,    // Handles Event Hub consumption
+    RabbitModule,      // Handles RabbitMQ publishing
+    LoggerModule,      // Provides logging services
+    AzureModule,       // Provides Azure IoT Hub endpoints
   ],
   controllers: [HealthController],
 })
